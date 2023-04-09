@@ -8,11 +8,10 @@ Created on Thu Mar 16 13:48:28 2023
 from random import choice, seed
 from copy import deepcopy
 
-ALPHABET = 'abcdefghijklmnopqrstuvxywz'
 BLACK = 0
 YELLOW = 1
 GREEN = 2
-#seed(0)
+seed(0)
 
 INFINITY = 2**31
 
@@ -163,9 +162,7 @@ def best_guess(lexicon, board, candidate_pool):
 
     return best_word
 
-def main():
-
-    lexicon_path = '500_words_sorted.txt'
+def play_wordle(lexicon_path):
 
     lexicon = Lexicon()
     lexicon.load_from_txt(lexicon_path)
@@ -184,15 +181,17 @@ def main():
         board.print_board()
 
         if result == [GREEN] * 5:
-            print('YOU WIN')
-            break
+            return turn
 
     else:
-        print('YOU LOSE')
+        print('The word was {}'.format(board.answer))
+        return -1
 
-    print('The word was {}'.format(board.answer))
-    #
-    #input('Press ENTER to close: ')
+def main():
+
+    lexicon_path = '100_words_sorted.txt'
+    play_wordle(lexicon_path)
+    
 
 if __name__ == '__main__':
     main()
