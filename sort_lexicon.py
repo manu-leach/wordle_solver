@@ -32,7 +32,7 @@ def write_lexicon_to_file(lexicon_path, lexicon):
 
 def main():
 
-    lexicon_path = '100_words.txt'
+    lexicon_path = '500_words.txt'
     lexicon = load_lexicon_to_list(lexicon_path)
 
     new_lexicon = sort_repeats_to_bottom(lexicon.copy())

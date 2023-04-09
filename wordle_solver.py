@@ -12,7 +12,7 @@ ALPHABET = 'abcdefghijklmnopqrstuvxywz'
 BLACK = 0
 YELLOW = 1
 GREEN = 2
-seed(0)
+#seed(0)
 
 INFINITY = 2**31
 
@@ -22,14 +22,75 @@ class WordleBoard:
         self.guesses = []
         self.results = []
 
-        self.answer = ''
-        self.candidate_pool = []
+    def make_guess(self, guess):
+        self.guesses.append(guess)
+        
+        result = [BLACK] * 5
+        unnaccounted_guess = [None] * 5
+        unnaccounted_answer = []
 
-    def recalc_candidate_pool(self, guess, result):
+        for i, letter in enumerate(guess):
+            if letter == self.answer[i]:
+                result[i] = GREEN
+            else:
+                unnaccounted_guess[i] = letter
+                unnaccounted_answer.append(self.answer[i])
+
+        for i, letter in enumerate(unnaccounted_guess):
+            if letter in unnaccounted_answer:
+                result[i] = YELLOW
+                unnaccounted_answer.remove(letter)
+
+        self.results.append(result)
+
+        return result
+
+    def set_answer(self, answer):
+        self.answer = answer
+
+    def copy(self):
+
+        copy_board = WordleBoard()
+        copy_board.guesses = deepcopy(self.guesses)
+        copy_board.results = self.results.copy()
+        copy_board.set_answer(self.answer)
+
+        return copy_board
+
+    def print_board(self):
+
+        for i, word in enumerate(self.guesses):
+            print('({},{}) ({},{}) ({},{}) ({},{}), ({},{})'.format(word[0],
+                                                            self.results[i][0],
+                                                            word[1],
+                                                            self.results[i][1],
+                                                            word[2],
+                                                            self.results[i][2],
+                                                            word[3],
+                                                            self.results[i][3],
+                                                            word[4],
+                                                            self.results[i][4]))
+
+class Lexicon:
+
+    def __init__(self):
+        self.word_list = []
+
+    def load_from_txt(self, lex_path):
+
+        with open(lex_path, mode='r', encoding='utf8') as f:
+            temp_list = f.readlines()
+
+        for i, line in enumerate(temp_list):
+            temp_list[i] = line.rstrip('\n')
+        
+        self.word_list = temp_list
+
+    def valid_words(self, guess, result):
 
         to_remove = set()
 
-        for word in self.candidate_pool:
+        for word in self.word_list:
             unaccounted_word = list(word)
 
             for i, letter in enumerate(guess):
@@ -60,89 +121,38 @@ class WordleBoard:
                         break
 
         for word in to_remove:
-            self.candidate_pool.remove(word)
+            self.word_list.remove(word)
 
-        #print(to_remove)
-        #print(self.candidate_pool)
+    def rnd(self):
 
-    def check_guess(self, guess):
-
-        result = [BLACK] * 5
-        unnaccounted_guess = [None] * 5
-        unnaccounted_answer = []
-
-        for i, letter in enumerate(guess):
-            if letter == self.answer[i]:
-                result[i] = GREEN
-            else:
-                unnaccounted_guess[i] = letter
-                unnaccounted_answer.append(self.answer[i])
-
-        for i, letter in enumerate(unnaccounted_guess):
-            if letter in unnaccounted_answer:
-                result[i] = YELLOW
-                unnaccounted_answer.remove(letter)
-
-        self.results.append(result)
-        self.recalc_candidate_pool(guess, result)
-
-    def make_guess(self, guess):
-        self.guesses.append(guess)
-        self.check_guess(guess)
-
-    def random_answer(self):
-        self.answer = choice(self.candidate_pool)
-        print(self.answer)
+        return choice(self.word_list)
 
     def copy(self):
+        copy_lexicon = Lexicon()
+        copy_lexicon.word_list = self.word_list.copy()
+        return copy_lexicon
 
-        copy_board = WordleBoard()
-        copy_board.guesses = deepcopy(self.guesses)
-        copy_board.results = deepcopy(self.results)
-        copy_board.answer = self.answer
-        copy_board.candidate_pool = deepcopy(self.candidate_pool)
-
-        return copy_board
-
-    def print_board(self):
-
-        for i, word in enumerate(self.guesses):
-            print('({},{}) ({},{}) ({},{}) ({},{}), ({},{})'.format(word[0],
-                                                            self.results[i][0],
-                                                            word[1],
-                                                            self.results[i][1],
-                                                            word[2],
-                                                            self.results[i][2],
-                                                            word[3],
-                                                            self.results[i][3],
-                                                            word[4],
-                                                            self.results[i][4]))
-
-def load_lexicon_to_list(lexicon_path):
-
-    with open(lexicon_path, mode='r', encoding='utf8') as f:
-        lex_list = f.readlines()
-
-    for i, word in enumerate(lex_list):
-        lex_list[i] = word.rstrip('\n')
-
-    return lex_list
-
-def calc_best_guess(lexicon, board):
+def best_guess(lexicon, board, candidate_pool):
 
     information = INFINITY
     best_word = None
 
-    if len(board.candidate_pool) == 1:
-        return board.candidate_pool[0]
+    if len(candidate_pool.word_list) == 1:
+        return candidate_pool.word_list[0]
 
-    for word in lexicon:
+    for word in lexicon.word_list:
         current_information = 0
-        for ans in board.candidate_pool:
+        for ans in candidate_pool.word_list:
             print('testing "{}" with answer "{}"'.format(word, ans))
             test_board = board.copy()
-            test_board.make_guess(word)
-            current_information += len(test_board.candidate_pool)
+            test_board.set_answer(ans)
+
+            test_candidate_pool = candidate_pool.copy()
+
+            result = test_board.make_guess(word)
+            test_candidate_pool.valid_words(word, result)
+
+            current_information += len(test_candidate_pool.word_list)
 
             if current_information >= information:
                 break
@@ -155,21 +165,25 @@ def calc_best_guess(lexicon, board):
 
 def main():
 
-    lexicon_path = 'sgb_words_sorted.txt'
+    lexicon_path = '500_words_sorted.txt'
+
+    lexicon = Lexicon()
+    lexicon.load_from_txt(lexicon_path)
+
+    candidate_pool = lexicon.copy()
 
     board = WordleBoard()
-    lexicon = load_lexicon_to_list(lexicon_path)
-    board.candidate_pool = lexicon.copy()
-    board.random_answer()
+    board.set_answer(candidate_pool.rnd())
 
     for turn in range(6):
         print('Turn {}'.format(turn + 1))
 
-        board.make_guess(calc_best_guess(lexicon, board))
-        #board.make_guess(input('Enter word: '))
+        guess = best_guess(lexicon, board, candidate_pool)
+        result = board.make_guess(guess)
+        candidate_pool.valid_words(guess, result)
         board.print_board()
 
-        if board.results[turn] == [GREEN] * 5:
+        if result == [GREEN] * 5:
             print('YOU WIN')
             break
 
@@ -177,7 +191,8 @@ def main():
         print('YOU LOSE')
 
     print('The word was {}'.format(board.answer))
-    input('Press ENTER to close: ')
+    #
+    #input('Press ENTER to close: ')
 
 if __name__ == '__main__':
     main()
