@@ -20,6 +20,7 @@ class WordleBoard:
     def __init__(self):
         self.guesses = []
         self.results = []
+        self.answer = 'aaaaa'
 
     def make_guess(self, guess):
         self.guesses.append(guess)
@@ -141,6 +142,7 @@ def best_guess(lexicon, board, candidate_pool):
 
     for word in lexicon.word_list:
         current_information = 0
+
         for ans in candidate_pool.word_list:
             print('testing "{}" with answer "{}"'.format(word, ans))
             test_board = board.copy()
@@ -181,18 +183,16 @@ def play_wordle(lexicon_path):
         board.print_board()
 
         if result == [GREEN] * 5:
-            return turn
+            return turn + 1
 
-    else:
-        print('The word was {}'.format(board.answer))
-        return -1
+    print('The word was {}'.format(board.answer))
+    return -1
 
 def main():
 
-    lexicon_path = 'sgb_words_sorted.txt'
+    lexicon_path = '100_words_sorted.txt'
     play_wordle(lexicon_path)
     input('Press enter to q: ')
     
-
 if __name__ == '__main__':
     main()
