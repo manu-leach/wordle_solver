@@ -189,8 +189,9 @@ def play_wordle(lexicon_path):
 
 def main():
 
-    lexicon_path = '100_words_sorted.txt'
+    lexicon_path = 'sgb_words_sorted.txt'
     play_wordle(lexicon_path)
+    input('Press enter to q: ')
     
 
 if __name__ == '__main__':
