@@ -24,7 +24,7 @@ class WordleBoard:
 
     def make_guess(self, guess):
         self.guesses.append(guess)
-        
+
         result = [BLACK] * 5
         unnaccounted_guess = [None] * 5
         unnaccounted_answer = []
@@ -83,42 +83,46 @@ class Lexicon:
 
         for i, line in enumerate(temp_list):
             temp_list[i] = line.rstrip('\n')
-        
+
         self.word_list = temp_list
+
+    def word_match_guess(self, word, guess, result):
+        '''
+        Based on guess and a result, checks if word could be the answer
+        '''
+
+        unaccounted_letters = []
+
+        for i, letter in enumerate(guess):
+            if result[i] == GREEN:
+                if letter != word[i]:
+                    return False
+            else:
+                unaccounted_letters.append(letter)
+
+        print(unaccounted_letters)
+
+        for i, letter in enumerate(guess):
+            if result[i] == YELLOW:
+                if letter in unaccounted_letters:
+                    unaccounted_letters.remove(letter)
+                else:
+                    return False
+            if result[i] == BLACK:
+                if letter in unaccounted_letters:
+                    return False
+
+        return True
 
     def valid_words(self, guess, result):
 
         to_remove = set()
 
         for word in self.word_list:
-            unaccounted_word = list(word)
-
-            for i, letter in enumerate(guess):
-                if result[i] == GREEN:
-                    if letter != word[i]:
-                        to_remove.add(word)
-                        #print('{} does not match green {}'.format(word, letter))
-                        break
-                    else:
-                        unaccounted_word.remove(letter)
-
-            # Nicer way to do to avoid lookup. TODO
-            if word in to_remove:
-                continue
-
-            for i, letter in enumerate(guess):
-                if result[i] == YELLOW:
-                    if letter in unaccounted_word:
-                        unaccounted_word.remove(letter)
-                    else:
-                        to_remove.add(word)
-                        #print('{} does not match yellow {}'.format(word, letter))
-                        break
-                elif result[i] == BLACK:
-                    if letter in unaccounted_word:
-                        to_remove.add(word)
-                        #print('{} does not match black {}'.format(word, letter))
-                        break
+            word_is_valid = self.word_match_guess(word, guess, result)
+            print('{} is valid for {}, {}: {}'.format(word, guess, result, word_is_valid))
+            if not word_is_valid:
+                to_remove.add(word)
 
         for word in to_remove:
             self.word_list.remove(word)
@@ -192,7 +196,7 @@ def main():
 
     lexicon_path = '100_words_sorted.txt'
     play_wordle(lexicon_path)
-    input('Press enter to q: ')
-    
+    #input('Press enter to q: ')
+
 if __name__ == '__main__':
     main()
