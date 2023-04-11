@@ -11,7 +11,7 @@ from copy import deepcopy
 BLACK = 0
 YELLOW = 1
 GREEN = 2
-#seed(0)
+seed(0)
 
 INFINITY = 2**31
 
@@ -98,7 +98,7 @@ class Lexicon:
                 if letter != guess[i]:
                     return False
             else:
-                unaccounted_letters.append(letter)
+                unaccounted_letters += letter,
 
         for i, letter in enumerate(guess):
             if result[i] == YELLOW:
@@ -106,7 +106,7 @@ class Lexicon:
                     unaccounted_letters.remove(letter)
                 else:
                     return False
-                
+
             if result[i] == BLACK:
                 if letter in unaccounted_letters:
                     return False
@@ -115,12 +115,12 @@ class Lexicon:
 
     def valid_words(self, guess, result):
 
-        to_remove = set()
+        #to_remove = set()
+        to_remove = [word for word in self.word_list if not self.word_match_guess(word, guess, result)]
 
-        for word in self.word_list:
-            word_is_valid = self.word_match_guess(word, guess, result)
-            if not word_is_valid:
-                to_remove.add(word)
+       # for word in self.word_list:
+            #if not self.word_match_guess(word, guess, result):
+                #to_remove.add(word)
 
         for word in to_remove:
             self.word_list.remove(word)
