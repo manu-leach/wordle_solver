@@ -24,27 +24,37 @@ def sort_repeats_to_bottom(word_list):
 
     return word_list
 
-def write_lexicon_to_file(lexicon_path, word_list):
+def write_lexicon_to_file(lexicon_path, lexicon):
 
-    sorted_lexicon_path = lexicon_path[:len(lexicon_path) - 4]+ '_sorted.txt'
-    with open(sorted_lexicon_path, 'w') as f:
-        for word in word_list:
+    with open(lexicon_path, mode='w', encoding='utf8') as f:
+        for word in lexicon.word_list:
             f.write(word)
             f.write('\n')
 
-def count_l
+def find_unshared_words(lexicon1, lexicon2):
+
+    unshared = set()
+
+    for word in lexicon1.word_list:
+        if word not in lexicon2.word_list:
+            unshared.add(word)
+
+    return unshared
 
 def main():
 
-    lexicon_path = '100_words.txt'
+    lexicon_path = 'sgb_words.txt'
     lexicon = Lexicon()
     lexicon.load_from_txt(lexicon_path)
 
-    new_lexicon = Lexicon()
-    new_lexicon.word_list = sort_by_letter_freq(new_lexicon.word_list)
+    selby_lex = Lexicon()
+    selby_lex.load_from_txt('solutions/first_50_solutions.txt')
 
+    for word in find_unshared_words(selby_lex, lexicon):
+        selby_lex.word_list.remove(word)
+        print('Removing {}'.format(word))
 
-    write_lexicon_to_file(lexicon_path, new_lexicon)
+    write_lexicon_to_file('solutions/first_50_solutions_with_sgb.txt', selby_lex)
 
 if __name__ == '__main__':
     main()

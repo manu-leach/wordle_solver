@@ -15,6 +15,8 @@ seed(0)
 
 INFINITY = 2**31
 
+BEST_FIRST = 'tares'
+
 class WordleBoard:
 
     def __init__(self):
@@ -131,17 +133,23 @@ class Lexicon:
         copy_lexicon.word_list = self.word_list.copy()
         return copy_lexicon
 
-def best_guess(lexicon, board, candidate_pool):
+def best_guess(lexicon, board, candidate_pool, lex_to_test=False):
 
     information = INFINITY
     best_word = None
 
+    if not lex_to_test:
+        lex_to_test = lexicon.copy()
+
+    if len(board.guesses) == 0:
+        return BEST_FIRST  
+
     if len(candidate_pool.word_list) == 1:
         return candidate_pool.word_list[0]
 
-    for j, word in enumerate(lexicon.word_list):
+    for j, word in enumerate(lex_to_test.word_list):
 
-        print('Considering guess {}/{}: {}'.format(j, len(lexicon.word_list),
+        print('Considering guess {}/{}: {}'.format(j, len(lex_to_test.word_list),
                                                    word))
         current_information = 0
 
@@ -169,7 +177,22 @@ def best_guess(lexicon, board, candidate_pool):
 
     return best_word
 
-def play_wordle(lexicon_path,answer=False):
+def best_first_guess(lexicon_path):
+
+    lexicon = Lexicon()
+    lexicon.load_from_txt(lexicon_path)
+
+    candidate_pool = lexicon.copy()
+
+    board = WordleBoard()
+    board.set_answer(candidate_pool.rnd)
+
+    top_words = Lexicon()
+    top_words.load_from_txt('selby_words_shared_with_sgb.txt')
+
+    return best_guess(lexicon, board, candidate_pool, top_words)
+
+def play_wordle(lexicon_path, answer=False):
 
     lexicon = Lexicon()
     lexicon.load_from_txt(lexicon_path)
@@ -198,8 +221,11 @@ def play_wordle(lexicon_path,answer=False):
 
 def main():
 
-    lexicon_path = '500_words_sorted.txt'
+    lexicon_path = 'sgb_words_sorted.txt'
     play_wordle(lexicon_path)
+
+    #print(best_first_guess(lexicon_path))
+
     #input('Press enter to q: ')
 
 if __name__ == '__main__':
