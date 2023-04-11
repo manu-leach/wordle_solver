@@ -115,15 +115,12 @@ class Lexicon:
 
     def valid_words(self, guess, result):
 
-        #to_remove = set()
         to_remove = [word for word in self.word_list if not self.word_match_guess(word, guess, result)]
-
-       # for word in self.word_list:
-            #if not self.word_match_guess(word, guess, result):
-                #to_remove.add(word)
 
         for word in to_remove:
             self.word_list.remove(word)
+
+        #self.word_list = [word for word in self.word_list if word not in to_remove]
 
     def rnd(self):
 
@@ -142,12 +139,17 @@ def best_guess(lexicon, board, candidate_pool):
     if len(candidate_pool.word_list) == 1:
         return candidate_pool.word_list[0]
 
-    for word in lexicon.word_list:
+    for j, word in enumerate(lexicon.word_list):
 
-        print('Considering guess {}'.format(word))
+        print('Considering guess {}/{}: {}'.format(j, len(lexicon.word_list),
+                                                   word))
         current_information = 0
 
-        for ans in candidate_pool.word_list:
+        for i, ans in enumerate(candidate_pool.word_list):
+
+            if not i % 100:
+                print('Answer {}/{}'.format(i, len(candidate_pool.word_list)))
+
             test_board = board.copy()
             test_board.set_answer(ans)
 
@@ -196,7 +198,7 @@ def play_wordle(lexicon_path,answer=False):
 
 def main():
 
-    lexicon_path = '100_words_sorted.txt'
+    lexicon_path = '500_words_sorted.txt'
     play_wordle(lexicon_path)
     #input('Press enter to q: ')
 
