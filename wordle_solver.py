@@ -11,7 +11,7 @@ from copy import deepcopy
 BLACK = 0
 YELLOW = 1
 GREEN = 2
-seed(0)
+#seed(0)
 
 INFINITY = 2**31
 
@@ -93,14 +93,12 @@ class Lexicon:
 
         unaccounted_letters = []
 
-        for i, letter in enumerate(guess):
+        for i, letter in enumerate(word):
             if result[i] == GREEN:
-                if letter != word[i]:
+                if letter != guess[i]:
                     return False
             else:
                 unaccounted_letters.append(letter)
-
-        print(unaccounted_letters)
 
         for i, letter in enumerate(guess):
             if result[i] == YELLOW:
@@ -108,6 +106,7 @@ class Lexicon:
                     unaccounted_letters.remove(letter)
                 else:
                     return False
+                
             if result[i] == BLACK:
                 if letter in unaccounted_letters:
                     return False
@@ -120,7 +119,6 @@ class Lexicon:
 
         for word in self.word_list:
             word_is_valid = self.word_match_guess(word, guess, result)
-            print('{} is valid for {}, {}: {}'.format(word, guess, result, word_is_valid))
             if not word_is_valid:
                 to_remove.add(word)
 
@@ -145,10 +143,11 @@ def best_guess(lexicon, board, candidate_pool):
         return candidate_pool.word_list[0]
 
     for word in lexicon.word_list:
+
+        print('Considering guess {}'.format(word))
         current_information = 0
 
         for ans in candidate_pool.word_list:
-            print('testing "{}" with answer "{}"'.format(word, ans))
             test_board = board.copy()
             test_board.set_answer(ans)
 
@@ -168,7 +167,7 @@ def best_guess(lexicon, board, candidate_pool):
 
     return best_word
 
-def play_wordle(lexicon_path):
+def play_wordle(lexicon_path,answer=False):
 
     lexicon = Lexicon()
     lexicon.load_from_txt(lexicon_path)
@@ -176,7 +175,10 @@ def play_wordle(lexicon_path):
     candidate_pool = lexicon.copy()
 
     board = WordleBoard()
-    board.set_answer(candidate_pool.rnd())
+    if not answer:
+        board.set_answer(candidate_pool.rnd())
+    else:
+        board.set_answer(answer)
 
     for turn in range(6):
         print('Turn {}'.format(turn + 1))

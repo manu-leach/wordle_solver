@@ -6,9 +6,12 @@ Created on Tue Apr 11 10:54:05 2023
 """
 import wordle_solver
 
-def test_word_match():
+def main():
 
-    test_word = 'manga'
+    lexicon = wordle_solver.Lexicon()
+    lexicon.load_from_txt('100_words_sorted.txt')
 
-    test_data = {
-        'mangy': [2,2,2,2,0]
+    print(lexicon.word_match_guess('thing', 'their', [2,2,0,1,0]))
+
+if __name__ == '__main__':
+    main()
