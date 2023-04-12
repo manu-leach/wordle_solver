@@ -136,7 +136,7 @@ class Lexicon:
 def best_guess(lexicon, board, candidate_pool, lex_to_test=False):
 
     information = INFINITY
-    best_word = None
+    best_words = []
 
     if not lex_to_test:
         lex_to_test = lexicon.copy()
@@ -168,14 +168,20 @@ def best_guess(lexicon, board, candidate_pool, lex_to_test=False):
 
             current_information += len(test_candidate_pool.word_list)
 
-            if current_information >= information:
+            if current_information > information:
                 break
 
         if current_information < information:
             information = current_information
-            best_word = word
+            best_words = [word]
+        if current_information == information:
+            best_words.append(word)
 
-    return best_word
+    for word in best_words:
+        if word in candidate_pool.word_list:
+            return word
+        
+    return best_words[0]
 
 def best_first_guess(lexicon_path):
 
