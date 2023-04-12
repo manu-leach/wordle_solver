@@ -15,7 +15,7 @@ def main():
 
     output_path = 'out/' + input('Output path: ') + '.txt'
 
-    lexicon_path = 'sgb_words_sorted.txt'
+    lexicon_path = 'lexicons/sgb_words_sorted.txt'
 
     with open(output_path, mode='w', encoding='utf8') as f:
         for i, solution in enumerate(test_solutions.word_list):

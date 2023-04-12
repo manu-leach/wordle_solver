@@ -188,7 +188,7 @@ def best_first_guess(lexicon_path):
     board.set_answer(candidate_pool.rnd)
 
     top_words = Lexicon()
-    top_words.load_from_txt('selby_words_shared_with_sgb.txt')
+    top_words.load_from_txt('lexicons/selby_words_shared_with_sgb.txt')
 
     return best_guess(lexicon, board, candidate_pool, top_words)
 
@@ -221,7 +221,7 @@ def play_wordle(lexicon_path, answer=False):
 
 def main():
 
-    lexicon_path = 'sgb_words_sorted.txt'
+    lexicon_path = 'lexicons/sgb_words_sorted.txt'
     play_wordle(lexicon_path)
 
     #print(best_first_guess(lexicon_path))
