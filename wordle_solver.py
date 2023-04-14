@@ -15,8 +15,6 @@ seed(0)
 
 INFINITY = 2**31
 
-BEST_FIRST = 'tares'
-
 class WordleBoard:
 
     def __init__(self):
@@ -141,22 +139,17 @@ def best_guess(lexicon, board, candidate_pool, lex_to_test=False):
     if not lex_to_test:
         lex_to_test = lexicon.copy()
 
-    if len(board.guesses) == 0:
-        return BEST_FIRST  
-
     if len(candidate_pool.word_list) == 1:
         return candidate_pool.word_list[0]
 
     for j, word in enumerate(lex_to_test.word_list):
+        
+        if not j % 100:
+            print('Considering guess {}/{}: {}'.format(j, len(lex_to_test.word_list), word))
 
-        print('Considering guess {}/{}: {}'.format(j, len(lex_to_test.word_list),
-                                                   word))
         current_information = 0
 
         for i, ans in enumerate(candidate_pool.word_list):
-
-            if not i % 100:
-                print('Answer {}/{}'.format(i, len(candidate_pool.word_list)))
 
             test_board = board.copy()
             test_board.set_answer(ans)
@@ -194,11 +187,11 @@ def best_first_guess(lexicon_path):
     board.set_answer(candidate_pool.rnd)
 
     top_words = Lexicon()
-    top_words.load_from_txt('lexicons/selby_words_shared_with_sgb.txt')
+    top_words.load_from_txt('lexicons/selby_top_words.txt')
 
     return best_guess(lexicon, board, candidate_pool, top_words)
 
-def play_wordle(lexicon_path, answer=False):
+def play_wordle(lexicon_path, first_guess, answer=False):
 
     lexicon = Lexicon()
     lexicon.load_from_txt(lexicon_path)
@@ -211,8 +204,13 @@ def play_wordle(lexicon_path, answer=False):
     else:
         board.set_answer(answer)
 
-    for turn in range(6):
+    result = board.make_guess(first_guess)
+    candidate_pool.valid_words(first_guess, result)
+    board.print_board()
+
+    for turn in range(1,6):
         print('Turn {}'.format(turn + 1))
+        print('{} left in candidate pool'.format(len(candidate_pool.word_list)))
 
         guess = best_guess(lexicon, board, candidate_pool)
         result = board.make_guess(guess)
@@ -226,12 +224,12 @@ def play_wordle(lexicon_path, answer=False):
     return -1
 
 def main():
-
-    lexicon_path = 'lexicons/sgb_words_sorted.txt'
-    play_wordle(lexicon_path)
+    
+    best_start_guess = 'soare'
+    lexicon_path = 'lexicons/valid-wordle-words.txt'
+    play_wordle(lexicon_path, best_start_guess)
 
     #print(best_first_guess(lexicon_path))
-
     #input('Press enter to q: ')
 
 if __name__ == '__main__':
