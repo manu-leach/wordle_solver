@@ -5,7 +5,7 @@ Created on Thu Mar 16 13:48:28 2023
 @author: manul
 """
 
-from wordle_solver import WordleBoard, Lexicon, GuessEvaluator
+from wordle_solver import WordleBoard, Lexicon, GuessEvaluator, INFINITY
 import multiprocessing
 
 def calc_for_a_single_guess(guess, board, candidate_pool):
@@ -13,24 +13,8 @@ def calc_for_a_single_guess(guess, board, candidate_pool):
     print('Considering {}'.format(guess))
     guess_evaluator = GuessEvaluator(board, candidate_pool)
     guess_evaluator.evaluate_guess(guess, breakout=False)
-    print('{} has expected pool length {}'.format(guess, guess_evaluator.get_expected_candidate_pool_length()))
-
-def use_threaded_maybe():
-
-    guesses_to_test = Lexicon()
-    guesses_to_test.load_from_txt('lexicons/selby_words_shared_with_sgb.txt')
-
-    board = WordleBoard('aaaaa') # answer is irrelevant here
-
-    lexicon = Lexicon()
-    lexicon.load_from_txt('lexicons/sgb_words.txt')
-
-    pool = multiprocessing.Pool(multiprocessing.cpu_count())
-    for guess in guesses_to_test.word_list:
-        pool.apply_async(calc_for_a_single_guess, args=(guess, board, lexicon))
-
-    pool.close()
-    pool.join()
+    print('{} {}'.format(guess, guess_evaluator.get_expected_candidate_pool_length()))
+    return guess_evaluator.get_expected_candidate_pool_length()
 
 def best_first_guess():
 
@@ -40,20 +24,28 @@ def best_first_guess():
     board = WordleBoard('aaaaa') # answer is irrelevant here
 
     lexicon = Lexicon()
-    lexicon.load_from_txt('lexicons/sgb_words.txt')
+    lexicon.load_from_txt('lexicons/100_words.txt')
 
-    guess_evaluator = GuessEvaluator(board, candidate_pool=lexicon)
-    
-    for i, guess in enumerate(guesses_to_test.word_list):
+    # https://stackoverflow.com/questions/23816546/how-many-processes-should-i-run-in-parallel
 
-        print('Considering guess {}/{}: {}'.format(i+1, len(guesses_to_test.word_list), guess))
-        guess_evaluator.evaluate_guess(guess, breakout=True)
+    with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
+        scores = pool.starmap(calc_for_a_single_guess, [[guess, board, lexicon] for guess in guesses_to_test.word_list])
 
-    print(guess_evaluator.best_words)
+    best_score = INFINITY
+    best_words = []
+    for i, score in enumerate(scores):
+        if score < best_score:
+            best_words = [(guesses_to_test.word_list[i], score)]
+            best_score = score
+        elif score == best_score:
+            best_words.append((guesses_to_test.word_list[i], score))
+
+    print(best_words)
+
 
 def main():
     
-    use_threaded_maybe()
+    best_first_guess()
 
 if __name__ == '__main__':
     main()
