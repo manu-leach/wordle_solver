@@ -7,6 +7,9 @@ Created on Thu Mar 16 13:48:28 2023
 
 from random import choice, seed
 from copy import deepcopy
+import multiprocessing
+
+NUMBER_OF_TURNS = 6
 
 BLACK = 0
 YELLOW = 1
@@ -15,7 +18,7 @@ seed(0)
 
 INFINITY = 2**31
 
-class WordleBoard:
+class WordleBoard():
 
     def __init__(self, answer):
         self.guesses = []
@@ -70,7 +73,7 @@ class WordleBoard:
                                                             word[4],
                                                             self.results[i][4]))
 
-class Lexicon:
+class Lexicon():
 
     def __init__(self):
         self.word_list = []
@@ -132,29 +135,14 @@ class Lexicon:
 
 class GuessEvaluator():
 
-    def __init__(self, board, candidate_pool):
-        self.best_candidate_pool_sum = INFINITY
-        self.best_words = []
-
+    def __init__(self, board, guess_lexicon, candidate_pool):
         self.board = board
+        self.guess_lexicon = guess_lexicon
         self.candidate_pool = candidate_pool
-
-    def get_best_guess(self):
-
-        for word in self.best_words:
-            if word in self.candidate_pool.word_list:
-                return word
-        
-        return self.best_words[0]
-
-    def get_expected_candidate_pool_length(self):
-        
-        if self.best_candidate_pool_sum == INFINITY:
-            return INFINITY
-        else:
-            return self.best_candidate_pool_sum / len(self.candidate_pool.word_list)
     
-    def evaluate_guess(self, guess, breakout=True):
+    def calc_expected_candidate_pool_length(self, guess):
+
+        print('Considering guess {}'.format(guess))
 
         candidate_pool_sum = 0
 
@@ -170,74 +158,91 @@ class GuessEvaluator():
 
             candidate_pool_sum += len(test_candidate_pool.word_list)
 
-            if breakout and candidate_pool_sum > self.best_candidate_pool_sum:
-                return False
+        return candidate_pool_sum / len(self.candidate_pool.word_list)
+    
+    def calc_guess_scores(self):
+
+        word_score_map = dict()
+
+        with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
+            scores = pool.map(self.calc_expected_candidate_pool_length, [guess for guess in self.guess_lexicon.word_list])
+
+        for i, score in enumerate(scores):
+            word_score_map[self.guess_lexicon.word_list[i]] = score
+
+        return word_score_map
+
+class ComputerPlayer():
+    
+    def __init__(self, lexicon, board, candidate_pool, start_guess=None):
+        self.lexicon = lexicon
+        self.board = board
+        self.candidate_pool = candidate_pool
+        self.start_guess = start_guess
+
+        self.turn = 0
+
+    def get_best_guesses_and_scores(self, score_map):
+
+        best_score = INFINITY
+        best_words = dict()
+
+        for word, score in score_map.items():
+            if score < best_score:
+                best_score = score
+                best_words = dict()
+                best_words[word] = score
+            elif score == best_score:
+                best_words[word] = score
+
+        return best_words
+    
+    def get_best_guess(self):
+        
+        score_map = GuessEvaluator(self.board, self.lexicon, self.candidate_pool).calc_guess_scores()
+        best_guesses_and_scores = self.get_best_guesses_and_scores(score_map)
+
+        for word in best_guesses_and_scores:
+            if word in self.candidate_pool.word_list:
+                return word
             
-        if candidate_pool_sum == self.best_candidate_pool_sum:
-            self.best_words.append(guess)
-        elif candidate_pool_sum < self.best_candidate_pool_sum:
-            self.best_candidate_pool_sum = candidate_pool_sum
-            self.best_words = [guess]
+        return choice(best_guesses_and_scores)
 
-        return True
-    
-def best_guess(lexicon, board, candidate_pool, lex_to_test=False):
+    def play_wordle(self):
 
-    information = INFINITY
-    best_words = []
+        while self.turn <= NUMBER_OF_TURNS:
+            self.turn += 1
+            print('Turn {}'.format(self.turn))
+            print('{} left in candidate pool'.format(len(self.candidate_pool.word_list)))
 
-    if not lex_to_test:
-        lex_to_test = lexicon.copy()
+            if self.turn == 1 and self.start_guess != None:
+                guess = self.start_guess
+            else: 
+                guess = self.get_best_guess()
 
-    if len(candidate_pool.word_list) == 1:
-        return candidate_pool.word_list[0]
-    
-    guess_evaluator = GuessEvaluator(board, candidate_pool)
+            result = self.board.make_guess(guess)
+            self.candidate_pool.valid_words(guess, result)
 
-    for j, word in enumerate(lex_to_test.word_list):
+            self.board.print_board()
 
-        if not j % 100:
-            print('Considering guess {}/{}: {}'.format(j, len(lex_to_test.word_list), word))
+            if result == [GREEN] * 5:
+                return self.turn
 
-        guess_evaluator.evaluate_guess(word, breakout=True)
-
-    return guess_evaluator.get_best_guess()
-
-def play_wordle(lexicon_path, first_guess, answer):
-
-    lexicon = Lexicon()
-    lexicon.load_from_txt(lexicon_path)
-
-    candidate_pool = lexicon.copy()
-
-    board = WordleBoard(answer)
-
-    result = board.make_guess(first_guess)
-    candidate_pool.valid_words(first_guess, result)
-    board.print_board()
-
-    for turn in range(1,6):
-        print('Turn {}'.format(turn + 1))
-        print('{} left in candidate pool'.format(len(candidate_pool.word_list)))
-
-        guess = best_guess(lexicon, board, candidate_pool)
-        result = board.make_guess(guess)
-        candidate_pool.valid_words(guess, result)
-        board.print_board()
-
-        if result == [GREEN] * 5:
-            return turn + 1
-
-    print('The word was {}'.format(board.answer))
-    return -1
+        print('The word was {}.'.format(self.board.answer))     
+        return -1
 
 def main():
 
-    best_start_guess = 'mango'
-    lexicon_path = 'lexicons/valid-wordle-words.txt'
-    play_wordle(lexicon_path, best_start_guess, 'mangy')
+    lexicon_path = 'lexicons/sgb_words.txt'
+    lexicon = Lexicon()
+    lexicon.load_from_txt(lexicon_path)
 
-    #print(best_first_guess(lexicon_path))
+    board = WordleBoard(answer='mange')
+
+    player = ComputerPlayer(lexicon, board, candidate_pool=lexicon, start_guess='tares')
+    final_score = player.play_wordle()
+
+    print('Scored {}'.format(final_score))
     #input('Press enter to q: ')
 
 if __name__ == '__main__':

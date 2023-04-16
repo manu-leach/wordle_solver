@@ -5,47 +5,33 @@ Created on Thu Mar 16 13:48:28 2023
 @author: manul
 """
 
-from wordle_solver import WordleBoard, Lexicon, GuessEvaluator, INFINITY
-import multiprocessing
-
-def calc_for_a_single_guess(guess, board, candidate_pool):
-
-    print('Considering {}'.format(guess))
-    guess_evaluator = GuessEvaluator(board, candidate_pool)
-    guess_evaluator.evaluate_guess(guess, breakout=False)
-    print('{} {}'.format(guess, guess_evaluator.get_expected_candidate_pool_length()))
-    return guess_evaluator.get_expected_candidate_pool_length()
-
-def best_first_guess():
-
-    guesses_to_test = Lexicon()
-    guesses_to_test.load_from_txt('lexicons/selby_words_shared_with_sgb.txt')
-
-    board = WordleBoard('aaaaa') # answer is irrelevant here
-
-    lexicon = Lexicon()
-    lexicon.load_from_txt('lexicons/100_words.txt')
-
-    # https://stackoverflow.com/questions/23816546/how-many-processes-should-i-run-in-parallel
-
-    with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
-        scores = pool.starmap(calc_for_a_single_guess, [[guess, board, lexicon] for guess in guesses_to_test.word_list])
-
-    best_score = INFINITY
-    best_words = []
-    for i, score in enumerate(scores):
-        if score < best_score:
-            best_words = [(guesses_to_test.word_list[i], score)]
-            best_score = score
-        elif score == best_score:
-            best_words.append((guesses_to_test.word_list[i], score))
-
-    print(best_words)
-
+import wordle_solver
 
 def main():
     
-    best_first_guess()
+    lexicon_name = 'sgb_words'
+    lexicon = wordle_solver.Lexicon()
+    lexicon.load_from_txt('lexicons/'+ lexicon_name + '.txt')
+
+    first_guesses_to_test = wordle_solver.Lexicon()
+    first_guesses_to_test.load_from_txt('lexicons/selby_words_shared_with_sgb.txt')
+
+    board = wordle_solver.WordleBoard('aaaaa') # Answer will do nothing here
+    guesser = wordle_solver.GuessEvaluator(board, guess_lexicon=first_guesses_to_test, candidate_pool=lexicon)
+    player = wordle_solver.ComputerPlayer(lexicon, board, candidate_pool=lexicon)
+
+    score_map = guesser.calc_guess_scores()
+    best_words_with_score = player.get_best_guesses_and_scores(score_map)
+
+    dump_filepath = 'out/' + lexicon_name + '_first_guess_scores.txt'
+    with open(dump_filepath, mode='w', encoding='utf8') as f:
+        f.write('- - - - - BEST WORDS - - - - - \n')
+        for word, score in best_words_with_score.items():
+            f.write('{}: {} \n'.format(word, score))
+
+        f.write('- - - - - ALL WORDS - - - - - \n')
+        for word, score in score_map.items():
+            f.write('{}: {} \n'.format(word,score))
 
 if __name__ == '__main__':
     main()
