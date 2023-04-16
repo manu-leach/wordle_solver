@@ -17,10 +17,10 @@ INFINITY = 2**31
 
 class WordleBoard:
 
-    def __init__(self):
+    def __init__(self, answer):
         self.guesses = []
         self.results = []
-        self.answer = 'aaaaa'
+        self.answer = answer
 
     def make_guess(self, guess):
         self.guesses.append(guess)
@@ -50,10 +50,9 @@ class WordleBoard:
 
     def copy(self):
 
-        copy_board = WordleBoard()
+        copy_board = WordleBoard(self.answer)
         copy_board.guesses = deepcopy(self.guesses)
         copy_board.results = self.results.copy()
-        copy_board.set_answer(self.answer)
 
         return copy_board
 
@@ -131,6 +130,57 @@ class Lexicon:
         copy_lexicon.word_list = self.word_list.copy()
         return copy_lexicon
 
+class GuessEvaluator():
+
+    def __init__(self, board, candidate_pool):
+        self.best_candidate_pool_sum = INFINITY
+        self.best_words = []
+
+        self.board = board
+        self.candidate_pool = candidate_pool
+
+    def get_best_guess(self):
+
+        for word in self.best_words:
+            if word in self.candidate_pool.word_list:
+                return word
+        
+        return self.best_words[0]
+
+    def get_expected_candidate_pool_length(self):
+        
+        if self.best_candidate_pool_sum == INFINITY:
+            return INFINITY
+        else:
+            return self.best_candidate_pool_sum / len(self.candidate_pool.word_list)
+    
+    def evaluate_guess(self, guess, breakout=True):
+
+        candidate_pool_sum = 0
+
+        for ans in self.candidate_pool.word_list:
+
+            test_board = self.board.copy()
+            test_board.set_answer(ans)
+
+            test_candidate_pool = self.candidate_pool.copy()
+
+            result = test_board.make_guess(guess)
+            test_candidate_pool.valid_words(guess, result)
+
+            candidate_pool_sum += len(test_candidate_pool.word_list)
+
+            if breakout and candidate_pool_sum > self.best_candidate_pool_sum:
+                return False
+            
+        if candidate_pool_sum == self.best_candidate_pool_sum:
+            self.best_words.append(guess)
+        elif candidate_pool_sum < self.best_candidate_pool_sum:
+            self.best_candidate_pool_sum = candidate_pool_sum
+            self.best_words = [guess]
+
+        return True
+    
 def best_guess(lexicon, board, candidate_pool, lex_to_test=False):
 
     information = INFINITY
@@ -141,68 +191,26 @@ def best_guess(lexicon, board, candidate_pool, lex_to_test=False):
 
     if len(candidate_pool.word_list) == 1:
         return candidate_pool.word_list[0]
+    
+    guess_evaluator = GuessEvaluator(board, candidate_pool)
 
     for j, word in enumerate(lex_to_test.word_list):
-        
+
         if not j % 100:
             print('Considering guess {}/{}: {}'.format(j, len(lex_to_test.word_list), word))
 
-        current_information = 0
+        guess_evaluator.evaluate_guess(word, breakout=True)
 
-        for i, ans in enumerate(candidate_pool.word_list):
+    return guess_evaluator.get_best_guess()
 
-            test_board = board.copy()
-            test_board.set_answer(ans)
-
-            test_candidate_pool = candidate_pool.copy()
-
-            result = test_board.make_guess(word)
-            test_candidate_pool.valid_words(word, result)
-
-            current_information += len(test_candidate_pool.word_list)
-
-            if current_information > information:
-                break
-
-        if current_information < information:
-            information = current_information
-            best_words = [word]
-        if current_information == information:
-            best_words.append(word)
-
-    for word in best_words:
-        if word in candidate_pool.word_list:
-            return word
-        
-    return best_words[0]
-
-def best_first_guess(lexicon_path):
+def play_wordle(lexicon_path, first_guess, answer):
 
     lexicon = Lexicon()
     lexicon.load_from_txt(lexicon_path)
 
     candidate_pool = lexicon.copy()
 
-    board = WordleBoard()
-    board.set_answer(candidate_pool.rnd)
-
-    top_words = Lexicon()
-    top_words.load_from_txt('lexicons/selby_top_words.txt')
-
-    return best_guess(lexicon, board, candidate_pool, top_words)
-
-def play_wordle(lexicon_path, first_guess, answer=False):
-
-    lexicon = Lexicon()
-    lexicon.load_from_txt(lexicon_path)
-
-    candidate_pool = lexicon.copy()
-
-    board = WordleBoard()
-    if not answer:
-        board.set_answer(candidate_pool.rnd())
-    else:
-        board.set_answer(answer)
+    board = WordleBoard(answer)
 
     result = board.make_guess(first_guess)
     candidate_pool.valid_words(first_guess, result)
@@ -224,10 +232,10 @@ def play_wordle(lexicon_path, first_guess, answer=False):
     return -1
 
 def main():
-    
-    best_start_guess = 'soare'
+
+    best_start_guess = 'mango'
     lexicon_path = 'lexicons/valid-wordle-words.txt'
-    play_wordle(lexicon_path, best_start_guess)
+    play_wordle(lexicon_path, best_start_guess, 'mangy')
 
     #print(best_first_guess(lexicon_path))
     #input('Press enter to q: ')
