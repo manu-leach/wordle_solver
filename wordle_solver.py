@@ -122,6 +122,7 @@ class Lexicon():
         for word in to_remove:
             self.word_list.remove(word)
 
+        # Somehow slower ???
         #self.word_list = [word for word in self.word_list if word not in to_remove]
 
     def rnd(self):
@@ -142,7 +143,7 @@ class GuessEvaluator():
     
     def calc_expected_candidate_pool_length(self, guess):
 
-        print('Considering guess {}'.format(guess))
+        #print('Considering guess {}'.format(guess))
 
         candidate_pool_sum = 0
 
@@ -160,6 +161,28 @@ class GuessEvaluator():
 
         return candidate_pool_sum / len(self.candidate_pool.word_list)
     
+    def calc_best_guesses(self):
+        '''
+        Bypasses the resource-heavy creation of a score map for general Wordle play.
+        '''
+
+        with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
+            scores = pool.map(self.calc_expected_candidate_pool_length, [guess for guess in self.guess_lexicon.word_list])
+
+        best_score = INFINITY
+        best_indices = []
+        for i, score in enumerate(scores):
+            if score < best_score:
+                best_score = score
+                best_indices = [i]
+            elif score == best_score:
+                best_indices.append(i)
+
+        best_words = [self.guess_lexicon.word_list[i] for i in best_indices]
+        
+        return best_words
+
+
     def calc_guess_scores(self):
 
         word_score_map = dict()
@@ -199,14 +222,14 @@ class ComputerPlayer():
     
     def get_best_guess(self):
         
-        score_map = GuessEvaluator(self.board, self.lexicon, self.candidate_pool).calc_guess_scores()
-        best_guesses_and_scores = self.get_best_guesses_and_scores(score_map)
+        best_guesses = GuessEvaluator(self.board, self.lexicon, self.candidate_pool).calc_best_guesses()
 
-        for word in best_guesses_and_scores:
+        for word in best_guesses:
+            print(word)
             if word in self.candidate_pool.word_list:
                 return word
             
-        return choice(best_guesses_and_scores)
+        return best_guesses[0]
 
     def play_wordle(self):
 
@@ -222,7 +245,6 @@ class ComputerPlayer():
 
             result = self.board.make_guess(guess)
             self.candidate_pool.valid_words(guess, result)
-
             self.board.print_board()
 
             if result == [GREEN] * 5:
@@ -239,7 +261,7 @@ def main():
 
     board = WordleBoard(answer='mange')
 
-    player = ComputerPlayer(lexicon, board, candidate_pool=lexicon, start_guess='tares')
+    player = ComputerPlayer(lexicon, board, candidate_pool=lexicon.copy(), start_guess='tares')
     final_score = player.play_wordle()
 
     print('Scored {}'.format(final_score))
