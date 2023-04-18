@@ -66,7 +66,7 @@ class WordleBoard():
     def print_board(self):
 
         for i, word in enumerate(self.guesses):
-            print('({},{}) ({},{}) ({},{}) ({},{}), ({},{})'.format(word[0],
+            print('({},{}) ({},{}) ({},{}) ({},{}) ({},{})'.format(word[0],
                                                             self.results[i][0],
                                                             word[1],
                                                             self.results[i][1],
@@ -145,13 +145,18 @@ class WordleGame():
         self.lexicon = lexicon
         self.board = WordleBoard()
         self.guess_checker = GuessChecker(answer)
+        self.turn = 1
         
     def single_turn(self, guess):
+
+        print('Turn {}'.format(self.turn))
 
         result = self.guess_checker.check_guess(guess)
 
         self.board.make_guess(guess, result)
         self.board.print_board()
+
+        self.turn += 1
 
         return result
 
@@ -161,14 +166,13 @@ class WordleGame():
 
     def play_wordle(self):
 
-        for i in range(NUMBER_OF_TURNS):
+        while self.turn <= NUMBER_OF_TURNS:
 
-            print('Turn {}'.format(i+1))
             guess = self.get_guess()
             result = self.single_turn(guess)
 
             if result == [GREEN] * 5:
-                return i + 1
+                return self.turn
         
         return -1
 
