@@ -155,13 +155,16 @@ class WordleGame():
 
         return result
 
+    def get_guess(self):
+        
+        return input('Make guess: ')
 
     def play_wordle(self):
 
         for i in range(NUMBER_OF_TURNS):
 
             print('Turn {}'.format(i+1))
-            guess = input('Make guess: ')
+            guess = self.get_guess()
             result = self.single_turn(guess)
 
             if result == [GREEN] * 5:
