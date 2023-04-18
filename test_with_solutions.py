@@ -9,19 +9,33 @@ import wordle_solver
 
 def gen_test_data():
 
-    test_solutions_path = 'solutions/first_50_solutions.txt'
+    test_solutions_name = 'first_50_solutions'
     test_solutions = wordle_solver.Lexicon()
-    test_solutions.load_from_txt(test_solutions_path)
+    test_solutions.load_from_txt('solutions/{}.txt'.format(test_solutions_name))
+
+    lexicon_name = 'sgb_words'
+    lexicon = wordle_solver.Lexicon()
+    lexicon.load_from_txt('lexicons/{}.txt'.format(lexicon_name))
+
+    best_start_guess = 'tares' # DEPENDENT ON LEXICON
 
     output_path = 'out/' + input('Output path: ') + '.txt'
 
-    best_start_guess = 'tares'
-    lexicon_path = 'lexicons/sgb_words_sorted.txt'
-
     with open(output_path, mode='w', encoding='utf8') as f:
-        for i, solution in enumerate(test_solutions.word_list):
-            f.write('- - - - - Test {}: {} - - - - -{}'.format(i, solution, '\n'))
-            f.write(str(wordle_solver.play_wordle(lexicon_path, best_start_guess, solution)) + '\n')
+        f.write('Solution test set: {}\n'.format(test_solutions_name))
+        f.write('Lexicon: {}\n'.format(lexicon_name))
+    
+    for i, answer in enumerate(test_solutions.word_list):
+        board = wordle_solver.WordleBoard(answer)
+        player = wordle_solver.ComputerPlayer(lexicon.copy(), board, candidate_pool=lexicon.copy(), start_guess=best_start_guess)
+        score = player.play_wordle()
+
+        with open(output_path, mode='w', encoding='utf8') as f:
+            f.write('- - - - - Answer {}: {} - - - - -\n'.format(i+1, answer))
+            f.write('Score: {}\n'.format(score))
+            player.board.print_board()
+
+
 
 def main():
 
