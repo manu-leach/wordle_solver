@@ -9,12 +9,12 @@ import wordle_solver
 
 def main():
     
-    lexicon_name = 'sgb_words'
+    lexicon_name = 'valid-wordle-words'
     lexicon = wordle_solver.Lexicon()
     lexicon.load_from_txt('lexicons/'+ lexicon_name + '.txt')
 
     first_guesses_to_test = wordle_solver.Lexicon()
-    first_guesses_to_test.load_from_txt('lexicons/selby_words_shared_with_sgb.txt')
+    first_guesses_to_test.load_from_txt('lexicons/selby_top_words.txt')
 
     board = wordle_solver.WordleBoard('aaaaa') # Answer will do nothing here
     guesser = wordle_solver.GuessEvaluator(board, guess_lexicon=first_guesses_to_test, candidate_pool=lexicon)
