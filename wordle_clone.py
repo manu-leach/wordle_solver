@@ -94,30 +94,14 @@ class Lexicon():
 
     def word_match_guess(self, word, guess, result):
         '''
-        Based on guess and a result, checks if word could be the answer
+        Checks if the guess would have yielded the same result if the word was the answer
         '''
 
-        unaccounted_letters = []
+        guess_checker = GuessChecker(word)
+        if result == guess_checker.check_guess(guess):
+            return True
 
-        for i, letter in enumerate(word):
-            if result[i] == GREEN:
-                if letter != guess[i]:
-                    return False
-            else:
-                unaccounted_letters += letter,
-
-        for i, letter in enumerate(guess):
-            if result[i] == YELLOW:
-                if letter in unaccounted_letters:
-                    unaccounted_letters.remove(letter)
-                else:
-                    return False
-
-            if result[i] == BLACK:
-                if letter in unaccounted_letters:
-                    return False
-
-        return True
+        return False
 
     def valid_words(self, guess, result):
 

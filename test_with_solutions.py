@@ -5,42 +5,40 @@ Created on Thu Mar 16 13:48:28 2023
 @author: manul
 """
 
+import wordle_clone
 import wordle_solver
-
-def gen_test_data():
-
-    test_solutions_name = 'first_50_solutions'
-    test_solutions = wordle_solver.Lexicon()
-    test_solutions.load_from_txt('solutions/{}.txt'.format(test_solutions_name))
-
-    lexicon_name = 'sgb_words'
-
-    best_start_guess = 'tares' # DEPENDENT ON LEXICON
-
-    output_path = 'out/' + input('Output path: ') + '.txt'
-
-    with open(output_path, mode='w', encoding='utf8') as f:
-        f.write('Solution test set: {}\n'.format(test_solutions_name))
-        f.write('Lexicon: {}\n'.format(lexicon_name))
-    
-    for i, answer in enumerate(test_solutions.word_list):
-        board = wordle_solver.WordleBoard(answer)
-        lexicon = wordle_solver.Lexicon()
-        lexicon.load_from_txt('lexicons/{}.txt'.format(lexicon_name))
-        player = wordle_solver.ComputerPlayer(lexicon, board, candidate_pool=lexicon.copy(), start_guess=best_start_guess)
-        score = player.play_wordle()
-
-        with open(output_path, mode='a', encoding='utf8') as f:
-            f.write('- - - - - Answer {}: {} - - - - -\n'.format(i+1, answer))
-            f.write('Score: {}\n'.format(score))
-            player.board.print_board()
-
-
 
 def main():
 
-    gen_test_data()
+    test_solutions_name = 'test_solutions'
+    test_solutions = wordle_clone.Lexicon()
+    test_solutions.load_from_txt('solutions/{}.txt'.format(test_solutions_name))
 
+    lexicon_name = '500_words'
+    lexicon_path = 'lexicons/{}.txt'.format(lexicon_name)
+    lexicon = wordle_clone.Lexicon()
+    lexicon.load_from_txt(lexicon_path)
+
+    start_guess = 'tares'
+
+    output_filename = input('Output file: ')
+    output_filepath = 'out/{}.txt'.format(output_filename)
+
+    with open(output_filepath, mode='w', encoding='utf8') as f:
+        f.write('Lexicon: {}\n'.format(lexicon_name))
+        f.write('Solution set: {}'.format(test_solutions_name))
+
+    score_list = []
+    for answer in test_solutions.word_list:
+        game = wordle_solver.ComputerWordleGame(answer, lexicon=lexicon, candidate_pool=lexicon.copy())
+        game.single_turn(start_guess)
+        score = game.play_wordle()
+        score_list.append(score)
+
+    with open(output_filepath, mode='a', encoding='utf8') as f:
+        for i, score in enumerate(score_list):
+            f.write('- - - - - Test {}: {} - - - - -\n'.format(i+1, test_solutions.word_list[i]))
+            f.write('Score: {}\n'.format(score))
 
 if __name__ == '__main__':
     main()

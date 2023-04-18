@@ -5,33 +5,33 @@ Created on Thu Mar 16 13:48:28 2023
 @author: manul
 """
 
+import wordle_clone
 import wordle_solver
 
 def main():
     
-    lexicon_name = 'valid-wordle-words'
-    lexicon = wordle_solver.Lexicon()
-    lexicon.load_from_txt('lexicons/'+ lexicon_name + '.txt')
+    lexicon_name = 'sgb_words'
+    lexicon_path = 'lexicons/{}.txt'.format(lexicon_name)
+    lexicon = wordle_clone.Lexicon()
+    lexicon.load_from_txt(lexicon_path)
 
-    first_guesses_to_test = wordle_solver.Lexicon()
-    first_guesses_to_test.load_from_txt('lexicons/selby_top_words.txt')
+    test_guesses_name = 'selby_top_words'
+    test_guesses_path = 'lexicons/{}.txt'.format(test_guesses_name)
+    test_guesses = wordle_clone.Lexicon()
+    test_guesses.load_from_txt(test_guesses_path)
 
-    board = wordle_solver.WordleBoard('aaaaa') # Answer will do nothing here
-    guesser = wordle_solver.GuessEvaluator(board, guess_lexicon=first_guesses_to_test, candidate_pool=lexicon)
-    player = wordle_solver.ComputerPlayer(lexicon, board, candidate_pool=lexicon)
-
-    score_map = guesser.calc_guess_scores()
-    best_words_with_score = player.get_best_guesses_and_scores(score_map)
+    player = wordle_solver.ComputerPlayer(test_guesses)
+    info_list = player.get_info_list_in_order_of_lexicon(candidate_pool=lexicon)
+    best_guesses, _ = player.get_best_guesses_and_info(info_list)
+    
+    print('Best guesses: {}'.format(best_guesses))
 
     dump_filepath = 'out/' + lexicon_name + '_first_guess_scores.txt'
     with open(dump_filepath, mode='w', encoding='utf8') as f:
-        f.write('- - - - - BEST WORDS - - - - - \n')
-        for word, score in best_words_with_score.items():
-            f.write('{}: {} \n'.format(word, score))
-
-        f.write('- - - - - ALL WORDS - - - - - \n')
-        for word, score in score_map.items():
-            f.write('{}: {} \n'.format(word,score))
+        f.write('Best guesses: {}\n'.format(best_guesses))
+        f.write('- - - - - All words - - - - -\n')
+        for i, info in enumerate(info_list):
+            f.write('{}: {}\n'.format(lexicon.word_list[i], info))
 
 if __name__ == '__main__':
     main()

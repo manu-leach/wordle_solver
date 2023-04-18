@@ -22,7 +22,7 @@ class InformationCalculator():
 
     def get_expected_information(self, guess):
 
-        print('Considering {}'.format(guess))
+        #print('Considering {}'.format(guess))
 
         sum = 0
         for answer in self.candidate_pool.word_list:
@@ -43,12 +43,9 @@ class ComputerPlayer():
         with multiprocessing.Pool(multiprocessing.cpu_count()) as pool:
             info_list = pool.map(calculator.get_expected_information, [guess for guess in self.lexicon.word_list])
             
-
         return info_list
 
-    def get_best_guesses_and_info(self, candidate_pool):
-
-        info_list = self.get_info_list_in_order_of_lexicon(candidate_pool)
+    def get_best_guesses_and_info(self, info_list):
 
         best_info = 0
         best_guesses = []
@@ -64,10 +61,12 @@ class ComputerPlayer():
     
     def get_best_guess(self, candidate_pool):
 
-        best_guesses, _ = self.get_best_guesses_and_info(candidate_pool)
+        info_list = self.get_info_list_in_order_of_lexicon(candidate_pool)
+        best_guesses, _ = self.get_best_guesses_and_info(info_list)
 
-        for guess in candidate_pool.word_list:
-            return guess
+        for guess in best_guesses:
+            if guess in candidate_pool.word_list:
+                return guess
         
         return best_guesses[0]
 
@@ -81,6 +80,7 @@ class ComputerWordleGame(wordle_clone.WordleGame):
     def single_turn(self, guess):
         result = wordle_clone.WordleGame.single_turn(self, guess)
         self.candidate_pool.valid_words(guess, result)
+        print('Candidate pool size: {}'.format(len(self.candidate_pool.word_list)))
         return result
 
     def get_guess(self):
