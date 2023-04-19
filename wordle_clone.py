@@ -129,7 +129,7 @@ class WordleGame():
         self.lexicon = lexicon
         self.board = WordleBoard()
         self.guess_checker = GuessChecker(answer)
-        self.turn = 1
+        self.turn = 0
         
     def single_turn(self, guess):
 
@@ -150,7 +150,7 @@ class WordleGame():
 
     def play_wordle(self):
 
-        while self.turn <= NUMBER_OF_TURNS:
+        while self.turn < NUMBER_OF_TURNS:
 
             guess = self.get_guess()
             result = self.single_turn(guess)

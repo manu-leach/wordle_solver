@@ -18,16 +18,19 @@ class InformationCalculator():
 
         p = len(test_candidate_pool.word_list) / len(self.candidate_pool.word_list)
 
+        #print('\n {} = {} / {} \n'.format(p, len(test_candidate_pool.word_list), len(self.candidate_pool.word_list)))
         return p
 
     def get_expected_information(self, guess):
 
         #print('Considering {}'.format(guess))
 
+        weight = 1/len(self.candidate_pool.word_list) # equal weighting
+
         sum = 0
         for answer in self.candidate_pool.word_list:
             p = self.get_guess_p(guess, answer)
-            sum -= p * log(p, 2)
+            sum -= weight * log(p, 2)
 
         return sum
 
@@ -95,7 +98,7 @@ def main():
 
     start_guess = 'tares'
 
-    game = ComputerWordleGame(answer='cigar', lexicon=lexicon, candidate_pool=lexicon.copy())
+    game = ComputerWordleGame(answer='mange', lexicon=lexicon, candidate_pool=lexicon.copy())
     game.single_turn(start_guess)
     game.play_wordle()
 

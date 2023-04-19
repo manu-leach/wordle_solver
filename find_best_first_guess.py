@@ -10,12 +10,12 @@ import wordle_solver
 
 def main():
     
-    lexicon_name = 'sgb_words'
+    lexicon_name = '500_words'
     lexicon_path = 'lexicons/{}.txt'.format(lexicon_name)
     lexicon = wordle_clone.Lexicon()
     lexicon.load_from_txt(lexicon_path)
 
-    test_guesses_name = 'selby_top_words'
+    test_guesses_name = '100_words_test_guess'
     test_guesses_path = 'lexicons/{}.txt'.format(test_guesses_name)
     test_guesses = wordle_clone.Lexicon()
     test_guesses.load_from_txt(test_guesses_path)
@@ -31,7 +31,7 @@ def main():
         f.write('Best guesses: {}\n'.format(best_guesses))
         f.write('- - - - - All words - - - - -\n')
         for i, info in enumerate(info_list):
-            f.write('{}: {}\n'.format(lexicon.word_list[i], info))
+            f.write('{}: {}\n'.format(test_guesses.word_list[i], info))
 
 if __name__ == '__main__':
     main()

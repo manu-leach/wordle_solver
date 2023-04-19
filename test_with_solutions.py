@@ -14,7 +14,7 @@ def main():
     test_solutions = wordle_clone.Lexicon()
     test_solutions.load_from_txt('solutions/{}.txt'.format(test_solutions_name))
 
-    lexicon_name = '500_words'
+    lexicon_name = 'sgb_words'
     lexicon_path = 'lexicons/{}.txt'.format(lexicon_name)
     lexicon = wordle_clone.Lexicon()
     lexicon.load_from_txt(lexicon_path)
