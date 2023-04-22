@@ -28,11 +28,28 @@ class InformationCalculator():
         weight = 1/len(self.candidate_pool.word_list) # equal weighting
 
         sum = 0
-        for answer in self.candidate_pool.word_list:
+        for i, answer in enumerate(self.candidate_pool.word_list):
             p = self.get_guess_p(guess, answer)
-            sum -= weight * log(p, 2)
+            sum -= weight * self.candidate_pool.weights[i] * log(p, 2)
 
         return sum
+
+class WeightedLexicon(wordle_clone.Lexicon):
+
+    def init(self):
+        wordle_clone.Lexicon.__init(self)
+        self.weights = []
+
+    def load_from_txt(self, lex_path):
+        wordle_clone.Lexicon.load_from_txt(self, lex_path)
+        self.weights = [1 for word in self.word_list] # TODO add proper weight loading with Ryan's code
+
+    def copy(self):
+        copy_lexicon = WeightedLexicon()
+        copy_lexicon.word_list = self.word_list.copy()
+        copy_lexicon.weights = self.weights.copy()
+
+        return copy_lexicon
 
 class ComputerPlayer():
 
@@ -96,9 +113,12 @@ def main():
     lexicon = wordle_clone.Lexicon()
     lexicon.load_from_txt(lexicon_path)
 
+    candidate_pool = WeightedLexicon()
+    candidate_pool.load_from_txt(lexicon_path)
+
     start_guess = 'tares'
 
-    game = ComputerWordleGame(answer='mange', lexicon=lexicon, candidate_pool=lexicon.copy())
+    game = ComputerWordleGame(answer='mange', lexicon=lexicon, candidate_pool=candidate_pool)
     game.single_turn(start_guess)
     game.play_wordle()
 

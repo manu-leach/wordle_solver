@@ -133,14 +133,13 @@ class WordleGame():
         
     def single_turn(self, guess):
 
+        self.turn += 1
         print('Turn {}'.format(self.turn))
 
         result = self.guess_checker.check_guess(guess)
 
         self.board.make_guess(guess, result)
         self.board.print_board()
-
-        self.turn += 1
 
         return result
 

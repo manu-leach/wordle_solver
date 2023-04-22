@@ -19,6 +19,9 @@ def main():
     lexicon = wordle_clone.Lexicon()
     lexicon.load_from_txt(lexicon_path)
 
+    candidate_pool = wordle_solver.WeightedLexicon()
+    candidate_pool.load_from_txt(lexicon_path)
+
     start_guess = 'tares'
 
     output_filename = input('Output file: ')
@@ -26,11 +29,12 @@ def main():
 
     with open(output_filepath, mode='w', encoding='utf8') as f:
         f.write('Lexicon: {}\n'.format(lexicon_name))
+        f.write('Start guess: {}\n'.format(start_guess))
         f.write('Solution set: {}'.format(test_solutions_name))
 
     score_list = []
     for answer in test_solutions.word_list:
-        game = wordle_solver.ComputerWordleGame(answer, lexicon=lexicon, candidate_pool=lexicon.copy())
+        game = wordle_solver.ComputerWordleGame(answer, lexicon=lexicon, candidate_pool=candidate_pool.copy())
         game.single_turn(start_guess)
         score = game.play_wordle()
         score_list.append(score)
