@@ -84,11 +84,10 @@ class Lexicon():
 
     def load_from_txt(self, lex_path):
 
+        temp_list = []
         with open(lex_path, mode='r', encoding='utf8') as f:
-            temp_list = f.readlines()
-
-        for i, line in enumerate(temp_list):
-            temp_list[i] = line.rstrip('\n')
+            for line in f.readlines():
+                temp_list.append(line[:5])
 
         self.word_list = temp_list
 

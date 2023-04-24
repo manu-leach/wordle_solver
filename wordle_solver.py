@@ -25,12 +25,17 @@ class InformationCalculator():
 
         #print('Considering {}'.format(guess))
 
-        weight = 1/len(self.candidate_pool.word_list) # equal weighting
+        weight_sum = 0
+        for weight in self.candidate_pool.weights:
+            weight_sum += weight
+
+        normalisation = 1/weight_sum
 
         sum = 0
         for i, answer in enumerate(self.candidate_pool.word_list):
             p = self.get_guess_p(guess, answer)
-            sum -= weight * self.candidate_pool.weights[i] * log(p, 2)
+            sum -= self.candidate_pool.weights[i] * log(p, 2)
+        sum *= normalisation
 
         return sum
 
@@ -40,9 +45,20 @@ class WeightedLexicon(wordle_clone.Lexicon):
         wordle_clone.Lexicon.__init(self)
         self.weights = []
 
-    def load_from_txt(self, lex_path):
-        wordle_clone.Lexicon.load_from_txt(self, lex_path)
-        self.weights = [1 for word in self.word_list] # TODO add proper weight loading with Ryan's code
+    def load_from_txt(self, lex_path, weights=True):
+
+        temp_word_list = []
+        temp_weights = []
+        with open(lex_path, mode='r', encoding='utf8') as f:
+            for line in f.readlines():
+                temp_word_list.append(line[:5])
+                if weights:
+                    temp_weights.append(float(line[6:].rstrip('\n')))
+                else:
+                    temp_weights.append(1)
+
+        self.word_list = temp_word_list
+        self.weights = temp_weights
 
     def copy(self):
         copy_lexicon = WeightedLexicon()
@@ -108,17 +124,17 @@ class ComputerWordleGame(wordle_clone.WordleGame):
     
 def main():
     
-    lexicon_name = 'sgb_words'
+    lexicon_name = 'weighted_sgb_words'
     lexicon_path = 'lexicons/{}.txt'.format(lexicon_name)
     lexicon = wordle_clone.Lexicon()
     lexicon.load_from_txt(lexicon_path)
 
     candidate_pool = WeightedLexicon()
-    candidate_pool.load_from_txt(lexicon_path)
+    candidate_pool.load_from_txt(lexicon_path, weights=True)
 
     start_guess = 'tares'
 
-    game = ComputerWordleGame(answer='mange', lexicon=lexicon, candidate_pool=candidate_pool)
+    game = ComputerWordleGame(answer='pupal', lexicon=lexicon, candidate_pool=candidate_pool)
     game.single_turn(start_guess)
     game.play_wordle()
 
